@@ -7,20 +7,21 @@ import os
 def main():
 
 
-    fileName = "/home/sw167/PostdocLarge/BEASTRun/Project_OrigFungi/indRun/cluster_2944    /cluster_2944.log"
-    fileName = "/home/sw167/PostdocLarge/BEASTRun/Project_OrigFungi/indRun/cluster_2888/cluster_2888.log"
-    fixLineNo(fileName)
-    sys.exit(-1)
+#    fileName = "/home/sw167/PostdocLarge/BEASTRun/Project_OrigFungi/indRun/cluster_2944    /cluster_2944.log"
+#    fileName = "/home/sw167/PostdocLarge/BEASTRun/Project_OrigFungi/indRun/cluster_2888/cluster_2888.log"
+#    fixLineNo(fileName)
+#    sys.exit(-1)
 
 #    sys.argv = ["", "/home/sw167/PostdocLarge/BEASTRun/Project_OrigFungi/MultiRegion_R5/allLogs/"]
-#    print "arg", sys.argv
-#    dir = sys.argv[1]
-#    if(len(sys.argv) > 1):
+    print "arg", sys.argv
+    dir = sys.argv[1]
+    if(len(sys.argv) > 1):
 #        for f in os.listdir(dir):
 #            print f
 #            fileName = dir + f
-#            fixLineNo(fileName)
-#            sys.exit(-1)
+            fileName = sys.argv[1]
+            fixLineNo(fileName)
+            sys.exit(-1)
 
 def fixLineNo(fileName):
 
@@ -57,14 +58,49 @@ def fixLineNo(fileName):
             iteration_gap = state_1 - state_0
             break
         i += 1
-    i = 0
-    while i < len(all_lines):
+        
+    new_file.append(all_lines[0])
+    new_file.append(all_lines[1])
+    new_file.append(all_lines[2])
+    
+    i = 3
+    while i < (len(all_lines)-2):
         line = all_lines[i]
+        
+        spaceIndex = line.index("\t") + 1
 
-        if (line.find(chr(ord("\00"))) is not -1) | (line.find("\\00") is not -1):
+        state = int(line[0:spaceIndex])
+        # print i, len(all_lines),  i>3 , i < (len(all_lines)-3),  i>3 and i < (len(all_lines)-3)
+        next_line = all_lines[i+1]
+        spaceIndex = next_line.index("\t") + 1
+        next_line_state = int(next_line[0:spaceIndex])
+        
+        if(next_line_state - state != iteration_gap):
+            jump = False
+            jump_line = all_lines[i+2]
+            spaceIndex = jump_line.index("\t") + 1
+            jump_line_state = int(jump_line[0:spaceIndex])
+            
+            print state, next_line_state, jump_line_state, iteration_gap
+
+            print "currentState", state
+            print "jumpState", jump_line_state
+            print "gap", iteration_gap
+        
+            new_file.append(line)
+            stat_count = line.count("\t")
+            for j in range(state / iteration_gap + 1, jump_line_state / iteration_gap):
+        
+                new_line = str(iteration_gap * (j)) + "\t0"*stat_count + "\n"  # + bk_line[(spaceIndex + 1):len(bk_line)]
+                new_file.append(new_line)
+        #
+            i = i + 1
+            print "===End IF skip steps==="
+
+        elif (line.find(chr(ord("\00"))) is not -1) | (line.find("\\00") is not -1):
             print "badline method 1:", i, all_lines.index(line)
 
-        if len(line) > cut:
+        elif (len(line) > cut) :
             print "badline method 2:", i, all_lines.index(line)
             bk_line = all_lines[(i - 1)]
 
